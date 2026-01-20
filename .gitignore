@@ -209,3 +209,6 @@ __marimo__/
 
 # Parquet files
 *.parquet
+
+echo "pipeline/ny_taxi_postgres_data/" >> .gitignore
+git rm -r --cached pipeline/ny_taxi_postgres_data/
