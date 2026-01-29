@@ -64,3 +64,27 @@ LIMIT 1;
 
 Answer: "dropoff_zone"	"tip_amount"
 "Yorkville West"	81.89
+
+
+## HOMEWORK 2
+Question 1. Executions - Extract - outputFiles - yellow_tripdata_2020-12.csv - 128.3 MB
+Answer: 128.3 MB
+
+Question 2. Answer: green_tripdata_2020-04.csv
+Question 3. 
+
+    SELECT count(*) 
+    FROM public.yellow_tripdata 
+    WHERE filename LIKE '%yellow_tripdata_2020%'
+
+Question 4. 
+
+Question 5. 
+query: 
+    SELECT COUNT(*) 
+    FROM public.yellow_tripdata 
+    WHERE filename = 'yellow_tripdata_2021-03.csv'
+
+Answer: 1925152
+
+Question 6.
