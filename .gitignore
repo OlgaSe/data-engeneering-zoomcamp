@@ -213,8 +213,7 @@ __marimo__/
 # Parquet files
 *.parquet
 
-
-*.json
+# Terraform
 terraform.tfstate*
 terraformrc
 terrafrom.rc
