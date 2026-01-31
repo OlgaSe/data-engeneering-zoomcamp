@@ -71,13 +71,17 @@ Question 1. Executions - Extract - outputFiles - yellow_tripdata_2020-12.csv - 1
 Answer: 128.3 MB
 
 Question 2. Answer: green_tripdata_2020-04.csv
-Question 3. 
 
+Question 3. 
     SELECT count(*) 
     FROM public.yellow_tripdata 
-    WHERE filename LIKE '%yellow_tripdata_2020%'
+Answer: 24,648,499
 
 Question 4. 
+    SELECT count(*) 
+    FROM public.green_tripdata 
+Answer: 1,734,051
+
 
 Question 5. 
 query: 
@@ -88,3 +92,4 @@ query:
 Answer: 1925152
 
 Question 6.
+Answer: Add a timezone property America/New_York
