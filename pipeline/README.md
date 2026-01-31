@@ -91,5 +91,4 @@ query:
 
 Answer: 1925152
 
-Question 6.
-Answer: Add a timezone property America/New_York
+Question 6. Answer: Add a timezone property America/New_York
