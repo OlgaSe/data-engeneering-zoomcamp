@@ -92,3 +92,71 @@ query:
 Answer: 1925152
 
 Question 6. Answer: Add a timezone property America/New_York
+
+
+##HOMEWORK 3
+CREATE AN EXTERNAL TABLE QUERY:
+
+CREATE OR REPLACE EXTERNAL TABLE `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`
+OPTIONS (
+  format = 'PARQUET',
+  uris = ['gs://olgas-zoomcamp/yellow_tripdata_2024-*.parquet']
+);
+
+#create materialized non-partitioned table
+CREATE OR REPLACE TABLE `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned` 
+    AS
+SELECT * 
+FROM `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`;
+
+##QUESTION 1
+QUERY:
+#count records for the yellow_tripdata table
+SELECT COUNT(*)
+FROM `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`
+LIMIT 1;
+
+#ANSWER: 20332093
+
+##QUESTION 2
+
+#count distinct number of PULocationIDs for external and materialized tables 
+#(~0MB)
+SELECT COUNT( DISTINCT (PULocationID))
+FROM `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`;
+
+#(~155.12MB)
+SELECT COUNT( DISTINCT (PULocationID)) 
+FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
+
+#ANSWER: 0 MB for the External Table and 155.12 MB for the Materialized Table
+
+##QUESTION 3
+The the estimate number for 2 queries are different because the BigQuery is a columnar based database and it ignores the columns that are excluded from processing when runs a query.
+
+#retrieve the PULocationID from the `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
+#retrieve the PULocationID and DOLocationID from the same table
+
+SELECT PULocationID
+FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
+#(~155.12MB)
+
+SELECT PULocationID, DOLocationID
+FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
+#(~310.24MB)
+
+#ANSWER: BigQuery is a columnar database, and it only scans the specific columns requested in the query. Querying two columns (PULocationID, DOLocationID) requires reading more data than querying one column (PULocationID), leading to a higher estimated number of bytes processed.
+
+##QUESTION 4:
+QUERY:
+    SELECT COUNT(*) 
+    FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
+    WHERE fare_amount = 0;
+#ANSWER: 8333
+
+##QUESTION 5;
+CREATE OR REPLACE TABLE `authentic-host-485219-t5.zoomcamp.yellow_tripdata_optimized`
+PARTITION BY DATE(tpep_dropoff_datetime)
+CLUSTER BY VendorID AS
+SELECT * FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
+#ANSWER: Partition by tpep_dropoff_datetime and Cluster on VendorID
