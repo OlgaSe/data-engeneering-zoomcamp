@@ -160,3 +160,35 @@ PARTITION BY DATE(tpep_dropoff_datetime)
 CLUSTER BY VendorID AS
 SELECT * FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
 #ANSWER: Partition by tpep_dropoff_datetime and Cluster on VendorID
+
+##QUESTION 6:
+
+QUERY:
+
+SELECT DISTINCT(VendorID)
+FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
+WHERE tpep_dropoff_datetime BETWEEN '2024-03-01' AND '2024-03-15';
+
+Materilized non-partitioned table: This query will process 310.24 MB when run.
+
+SELECT DISTINCT(VendorID)
+FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_optimized`
+WHERE tpep_dropoff_datetime BETWEEN '2024-03-01' AND '2024-03-15';
+
+Optimized table partitioned by date: This query will process 26.84 MB when run.
+
+Answer: 310.24 MB for non-partitioned table and 26.84 MB for the partitioned table
+
+##QUESTION 7
+ANSWER: GCP Bucket
+
+##QUESTION 8 
+ANSWER: False. Because clasterization depends on a table usage, it's great if queries will be using filters (like where clause) or aggregations (like group by).
+
+##QUESTION 9
+
+SELECT COUNT(*)
+FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
+This query will process 0 B when run.
+
+ANSWER: The result of this query is the number of rows in the given table, Big Query store this number as metadata so there is no need to scan all the table. 
