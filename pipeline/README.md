@@ -105,114 +105,140 @@ ANSWER: The result of this query is the number of rows in the given table, Big Q
 Question 6. Answer: Add a timezone property America/New_York
 
 
-## HOMEWORK 3
+# HOMEWORK 3
 
 Create an external table query:
+
+```
 CREATE OR REPLACE EXTERNAL TABLE `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`
 OPTIONS (
   format = 'PARQUET',
   uris = ['gs://olgas-zoomcamp/yellow_tripdata_2024-*.parquet']
 );
+```
 
-#create materialized non-partitioned table
-CREATE OR REPLACE TABLE `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned` 
-    AS
+Create materialized non-partitioned table:
+```
+CREATE OR REPLACE TABLE `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned` AS 
 SELECT * 
 FROM `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`;
+```
 
-## QUESTION 1
+### QUESTION 1
 
-# QUERY:
-#count records for the yellow_tripdata table
+**Query:**
+Count records for the yellow_tripdata table
+```
 SELECT COUNT(*)
 FROM `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`
 LIMIT 1;
-
-# ANSWER: 
+```
+**Answer:**
 20332093
 
-## QUESTION 2
+### QUESTION 2
 
-# QUERY
-#count distinct number of PULocationIDs for external and materialized tables 
-#(~0MB)
+**Query:**
+Count distinct number of PULocationIDs for external and materialized tables 
+
+```
 SELECT COUNT( DISTINCT (PULocationID))
 FROM `authentic-host-485219-t5.zoomcamp.external_yellow_tripdata`;
+```
+result: ~0MB
 
-#(~155.12MB)
+```
 SELECT COUNT( DISTINCT (PULocationID)) 
 FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
+```
+result: ~155.12MB
 
-# ANSWER: 
+**Answer:** 
 0 MB for the External Table and 155.12 MB for the Materialized Table
 
-## QUESTION 3
-The the estimate number for 2 queries are different because the BigQuery is a columnar based database and it ignores the columns that are excluded from processing when runs a query.
 
-#retrieve the PULocationID from the `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
-#retrieve the PULocationID and DOLocationID from the same table
+### QUESTION 3
+The estimate number for 2 queries are different because the BigQuery is a columnar based database and it ignores the columns that are excluded from processing when runs a query.
 
+Retrieve the PULocationID from the `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
+#retrieve the PULocationID and DOLocationID from the same table.
+
+```
 SELECT PULocationID
 FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
-#(~155.12MB)
+```
+Result: ~155.12MB
 
+```
 SELECT PULocationID, DOLocationID
 FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
-#(~310.24MB)
+```
+Result: ~310.24MB
 
-# ANSWER: 
+**Answer:**
 BigQuery is a columnar database, and it only scans the specific columns requested in the query. Querying two columns (PULocationID, DOLocationID) requires reading more data than querying one column (PULocationID), leading to a higher estimated number of bytes processed.
 
-## QUESTION 4:
 
-# QUERY:
+### QUESTION 4
+
+**Query:**
+```
     SELECT COUNT(*) 
     FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
     WHERE fare_amount = 0;
-# ANSWER: 
+```
+**Answer:**
 8333
 
-## QUESTION 5;
+### QUESTION 5
 
-# QUERY:
+**Query:**
+```
 CREATE OR REPLACE TABLE `authentic-host-485219-t5.zoomcamp.yellow_tripdata_optimized`
-PARTITION BY DATE(tpep_dropoff_datetime)
+PARTITION BY DATE (tpep_dropoff_datetime)
 CLUSTER BY VendorID AS
 SELECT * FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`;
+```
 
-# ANSWER: 
+**Answer:**
 Partition by tpep_dropoff_datetime and Cluster on VendorID
 
-## QUESTION 6:
+### QUESTION 6
 
-# QUERY:
+**Query:**
+```
 SELECT DISTINCT(VendorID)
 FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
 WHERE tpep_dropoff_datetime BETWEEN '2024-03-01' AND '2024-03-15';
+```
 
 Materialized non-partitioned table: This query will process 310.24 MB when run.
 
+```
 SELECT DISTINCT(VendorID)
 FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_optimized`
 WHERE tpep_dropoff_datetime BETWEEN '2024-03-01' AND '2024-03-15';
+```
 
 Optimized table partitioned by date: This query will process 26.84 MB when run.
 
-# ANSWER: 
+**Answer:** 
 310.24 MB for non-partitioned table and 26.84 MB for the partitioned table
 
-## QUESTION 7
-# ANSWER: 
-GCP Bucket
+### QUESTION 7
+**Answer:** GCP Bucket
 
-## QUESTION 8 
-# ANSWER: 
+### QUESTION 8 
+**Answer:** 
 False. Because clasterization depends on a table usage, it's great if queries will be using filters (like where clause) or aggregations (like group by).
 
-## QUESTION 9
-# QUERY:
+### QUESTION 9
+**Query:**
+```
 SELECT COUNT(*)
 FROM `authentic-host-485219-t5.zoomcamp.yellow_tripdata_non_partitioned`
+```
 This query will process 0 B when run.
 
-# ANSWER: The result of this query is the number of rows in the given table, Big Query store this number as metadata so there is no need to scan all the table. 
+**Answer:** 
+The result of this query is the number of rows in the given table, Big Query store this number as metadata so there is no need to scan all the table. 
