@@ -242,3 +242,59 @@ This query will process 0 B when run.
 
 **Answer:** 
 The result of this query is the number of rows in the given table, Big Query store this number as metadata so there is no need to scan all the table. 
+
+
+## Homework 4
+### Question 1. 
+**Answer:** 3. int_trips_unioned only
+### Question 2.
+**Answer:** 2. dbt fails the test with non-zero exit code
+### Question 3.
+**Query:**
+```
+SELECT COUNT(*) 
+FROM `authentic-host-485219-t5.dbt_olgase.fct_monthly_zone_revenue`;
+```
+**Answer:** 1. 12,998
+
+### Question 4.
+**Query**
+```
+SELECT 
+    pickup_zone,
+    SUM(revenue_monthly_total_amount) as total_revenue_2020
+FROM 
+  `authentic-host-485219-t5.dbt_olgase.fct_monthly_zone_revenue`
+WHERE 
+    service_type = 'Green' 
+    AND EXTRACT(YEAR FROM revenue_month) = 2020
+GROUP BY pickup_zone
+ORDER BY total_revenue_2020 DESC
+LIMIT 5;
+```
+**Answer:** 1. East Harlem North
+
+### Question 5.
+***Query***
+```
+SELECT 
+  SUM(total_monthly_trips) AS total_trips_2019_10
+FROM 
+  `authentic-host-485219-t5.dbt_olgase.fct_monthly_zone_revenue`
+WHERE 
+  service_type = 'Green' 
+  AND EXTRACT(YEAR FROM revenue_month) = 2019
+  AND EXTRACT(MONTH FROM revenue_month) = 10
+LIMIT 1;
+```
+**Answer:** 384,624
+
+### Question 6. 
+***Query***
+```
+SELECT 
+  COUNT (*) as total_rows
+FROM 
+  `authentic-host-485219-t5.dbt_olgase.stg_fhv_tripdata`
+```
+**Answer:** 2. 43244693
