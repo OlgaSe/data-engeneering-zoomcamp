@@ -104,3 +104,5 @@ sources:
             description: Improvement surcharge
           - name: total_amount
             description: Total amount charged
+      - name: fhv_tripdata
+        description: "FHV trip data for 2019"
