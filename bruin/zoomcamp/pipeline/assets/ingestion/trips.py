@@ -8,6 +8,8 @@ name: ingestion.trips
 # Docs: https://getbruin.com/docs/bruin/assets/python
 type: python
 
+connection: bq-default
+
 # TODO: Pick a Python image version (Bruin runs Python in isolated environments).
 # Example: python:3.11
 image: python:3.11
@@ -117,25 +119,89 @@ import io
 import os
 import json
 
+def generate_month_range(start_date: str, end_date: str) -> list[tuple[int, int]]:
+    """
+    Generate list of (year, month) tuples for all months between start and end dates (inclusive).
+
+    Args:
+      start_date: Start date in 'YYYY-MM-DD' format
+      end_date: End date in 'YYYY-MM-DD' format
+
+    Returns:
+      List of (year, month) tuples
+    """
+    start_month = datetime.strptime(start_date, '%Y-%m-%d').replace(day=1)
+    end_month = datetime.strptime(end_date, '%Y-%m-%d').replace(day=1)
+
+    print(f"Generating months between {start_month} and {end_month}")
+    months = []
+    current = start_month
+    while current <= end_month:
+      months.append((current.year, current.month))
+      current += relativedelta(months=1)
+
+    print(f"Total months to ingest: {len(months)}")
+
+    return months
+
 def materialize():
-    """
-    TODO: Implement ingestion using Bruin runtime context.
+  # Get start and end dates from environment variables
+  start_date = os.environ.get('BRUIN_START_DATE')
+  end_date = os.environ.get('BRUIN_END_DATE')
 
-    Required Bruin concepts to use here:
-    - Built-in date window variables:
-      - BRUIN_START_DATE / BRUIN_END_DATE (YYYY-MM-DD)
-      - BRUIN_START_DATETIME / BRUIN_END_DATETIME (ISO datetime)
-      Docs: https://getbruin.com/docs/bruin/assets/python#environment-variables
-    - Pipeline variables:
-      - Read JSON from BRUIN_VARS, e.g. `taxi_types`
-      Docs: https://getbruin.com/docs/bruin/getting-started/pipeline-variables
+  # Get taxi_type
+  bruin_vars = json.loads(os.environ["BRUIN_VARS"])
+  taxi_types = bruin_vars.get('taxi_types')
+  print(f"Taxi types: {taxi_types}")
 
-    Design TODOs (keep logic minimal, focus on architecture):
-    - Use start/end dates + `taxi_types` to generate a list of source endpoints for the run window.
-    - Fetch data for each endpoint, parse into DataFrames, and concatenate.
-    - Add a column like `extracted_at` for lineage/debugging (timestamp of extraction).
-    - Prefer append-only in ingestion; handle duplicates in staging.
-    """
-    # return final_dataframe
+  # Generate list of months to process
+  months = generate_month_range(start_date, end_date)
+
+  # Download and combine parquet files
+  all_dataframes = []
+  errors = []
+  base_url = 'https://d37ci6vzurychx.cloudfront.net/trip-data'
+  extracted_at = datetime.now()
+  
+  for taxi_type in taxi_types:
+    for year, month in months:
+      print(f"Downloading {year}-{month:02d}: {taxi_type}")
+      url = f'{base_url}/{taxi_type}_tripdata_{year}-{month:02d}.parquet'
+
+      try:
+        response = requests.get(url, timeout=300)
+        response.raise_for_status()
+
+        df = pd.read_parquet(io.BytesIO(response.content))
+
+        # Normalize column names to lowercase with underscores to avoid collisions
+        # e.g., 'Airport_fee' and 'airport_fee' both become 'airport_fee'
+        df.columns = df.columns.str.lower().str.replace(' ', '_')
+
+        df['taxi_type'] = taxi_type
+        df['extracted_at'] = extracted_at
+
+        all_dataframes.append(df)
+        print(f"Successfully downloaded {year}-{month:02d}: {len(df)} rows")
+
+      except requests.exceptions.RequestException as e:
+        error_msg = f"Error downloading {taxi_type} {year}-{month:02d}: {e}"
+        print(error_msg)
+        errors.append(error_msg)
+      except Exception as e:
+        error_msg = f"Error processing {taxi_type} {year}-{month:02d}: {e}"
+        print(error_msg)
+        errors.append(error_msg)
+
+  if not all_dataframes:
+    error_summary = "\n".join(errors) if errors else "No errors recorded"
+    raise ValueError(f"No dataframes to combine. Failed to download all files.\nErrors:\n{error_summary}")
+  
+  if errors:
+    print(f"\nWarning: {len(errors)} file(s) failed to download, but continuing with {len(all_dataframes)} successful download(s)")
+
+  combined_df = pd.concat(all_dataframes, ignore_index=True)
+  print(f"Total rows combined: {len(combined_df)}")
+  return combined_df
 
 
