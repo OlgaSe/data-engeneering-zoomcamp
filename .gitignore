@@ -220,3 +220,5 @@ terrafrom.rc
 terraform/keys/
 terraform/keys/my-creds.json
 .terraform/
+
+.bruin.yml
