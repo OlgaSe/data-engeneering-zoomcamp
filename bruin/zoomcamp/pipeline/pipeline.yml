@@ -3,7 +3,7 @@ schedule: monthly
 start_date: "2021-01-01"
 
 default_connections:
-  duckdb: "bq-default"
+  google_cloud_platform: "bq-default"
 
 variables:
   taxi_types:

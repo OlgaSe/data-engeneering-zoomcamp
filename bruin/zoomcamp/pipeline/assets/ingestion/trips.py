@@ -1,41 +1,16 @@
 """@bruin
 
-# TODO: Set the asset name (recommended pattern: schema.asset_name).
-# - Convention in this module: use an `ingestion.` schema for raw ingestion tables.
 name: ingestion.trips
-
-# TODO: Set the asset type.
-# Docs: https://getbruin.com/docs/bruin/assets/python
-type: python
-
 connection: bq-default
 
-# TODO: Pick a Python image version (Bruin runs Python in isolated environments).
-# Example: python:3.11
-image: python:3.11
-
-# TODO: Choose materialization (optional, but recommended).
-# Bruin feature: Python materialization lets you return a DataFrame (or list[dict]) and Bruin loads it into your destination.
-# This is usually the easiest way to build ingestion assets in Bruin.
-# Alternative (advanced): you can skip Bruin Python materialization and write a "plain" Python asset that manually writes
-# into DuckDB (or another destination) using your own client library and SQL. In that case:
-# - you typically omit the `materialization:` block
-# - you do NOT need a `materialize()` function; you just run Python code
-# Docs: https://getbruin.com/docs/bruin/assets/python#materialization
 materialization:
-  # TODO: choose `table` or `view` (ingestion generally should be a table)
   type: table
-  # TODO: pick a strategy.
-  # suggested strategy: append
   strategy: append
-
-# TODO: Define output columns (names + types) for metadata, lineage, and quality checks.
-# Tip: mark stable identifiers as `primary_key: true` if you plan to use `merge` later.
-# Docs: https://getbruin.com/docs/bruin/assets/columns
+image: python:3.11
 
 columns:
   - name: vendorid
-    type: DOUBLE
+    type: INTEGER
     description: A code indicating the TPEP provider that provided the record
   - name: tpep_pickup_datetime
     type: TIMESTAMP
@@ -56,50 +31,54 @@ columns:
     type: INTEGER
     description: TLC Taxi Zone in which the taximeter was disengaged
   - name: taxi_type
-    type: VARCHAR
+    type: STRING
     description: Type of taxi (yellow or green)
   - name: extracted_at
     type: TIMESTAMP
     description: Timestamp when the data was extracted from the source
   - name: passenger_count
-    type: DOUBLE
+    type: FLOAT
     description: The number of passengers in the vehicle (entered by the driver)
   - name: trip_distance
-    type: DOUBLE
+    type: FLOAT
     description: The elapsed trip distance in miles reported by the taximeter
   - name: store_and_fwd_flag
-    type: VARCHAR
+    type: STRING
     description: This flag indicates whether the trip record was held in vehicle memory before sending to the vendor
   - name: payment_type
-    type: DOUBLE
+    type: FLOAT
     description: A numeric code signifying how the passenger paid for the trip
   - name: fare_amount
-    type: DOUBLE
+    type: FLOAT
     description: The time-and-distance fare calculated by the meter
   - name: extra
-    type: DOUBLE
+    type: FLOAT
     description: Miscellaneous extras and surcharges
   - name: mta_tax
-    type: DOUBLE
+    type: FLOAT
     description: $0.50 MTA tax that is automatically triggered based on the metered rate in use
   - name: tip_amount
-    type: DOUBLE
+    type: FLOAT
     description: Tip amount (automatically populated for credit card tips, manually entered for cash tips)
   - name: tolls_amount
-    type: DOUBLE
+    type: FLOAT
     description: Total amount of all tolls paid in trip
   - name: improvement_surcharge
-    type: DOUBLE
+    type: FLOAT
     description: $0.30 improvement surcharge assessed on hailed trips at the flag drop
   - name: total_amount
-    type: DOUBLE
+    type: FLOAT
     description: The total amount charged to passengers (does not include cash tips)
   - name: congestion_surcharge
-    type: DOUBLE
+    type: FLOAT
     description: Congestion surcharge for trips that start, end or pass through the Manhattan Central Business District
   - name: airport_fee
-    type: DOUBLE
+    type: FLOAT
     description: Airport fee for trips that start or end at an airport
+  - name: ratecodeid
+    type: FLOAT
+  - name: trip_type
+    type: FLOAT
 
 @bruin"""
 
@@ -203,5 +182,3 @@ def materialize():
   combined_df = pd.concat(all_dataframes, ignore_index=True)
   print(f"Total rows combined: {len(combined_df)}")
   return combined_df
-
-
